@@ -1,0 +1,296 @@
+import type { Card, GameBattleState } from '../types/game';
+
+export const ALL_CARDS: Card[] = [
+  // --- BAŞLANGIÇ KARTLARI (STARTER) ---
+  {
+    id: 'starter_strike',
+    cardKey: 'strike',
+    name: 'Kılıç Darbesi',
+    cardType: 'commander',
+    rarity: 'starter',
+    cost: 1,
+    description: 'Seçilen hedefe 6 hasar verir. Ön saftaysan 9 hasar verir.',
+    flavor: 'Temel ama etkili bir kılıç hamlesi.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'starter_defend',
+    cardKey: 'defend',
+    name: 'Kalkan Siperi',
+    cardType: 'commander',
+    rarity: 'starter',
+    cost: 1,
+    description: 'Komutana 5 Blok kazandırır.',
+    flavor: 'Gelen darbeleri karşılamak için kalkanı kaldır.',
+    targetType: 'self',
+  },
+  {
+    id: 'starter_rally',
+    cardKey: 'rally',
+    name: 'Komuta Narası',
+    cardType: 'tactics',
+    rarity: 'starter',
+    cost: 1,
+    description: 'Tüm orduya 3 Blok verir ve 1 kart çekersin.',
+    flavor: 'Askerlerine arkalarında olduğun hissini ver.',
+    targetType: 'army',
+  },
+
+  // --- ENERJİ GÜÇLENDİRME KARTLARI (YENİ - KULLANICI TALEBİ: MAKSİMUM 5 ENERJİ SINIRLI) ---
+  {
+    id: 'war_horn',
+    cardKey: 'war_horn',
+    name: 'Hücum Borusu (Güçlendirme)',
+    cardType: 'tactics',
+    rarity: 'uncommon',
+    cost: 0,
+    description: '0 Enerji. Komutanın enerjisini anında +2 arttırır (En fazla 5 ile sınırlı) ve 1 Kart çeker.',
+    flavor: 'Savaş borusunun sesi yorgun savaşçıları anında ayağa kaldırır.',
+    targetType: 'self',
+  },
+  {
+    id: 'war_banner',
+    cardKey: 'war_banner',
+    name: 'Savaş Sancağı (Güçlendirme)',
+    cardType: 'tactics',
+    rarity: 'rare',
+    cost: 1,
+    description: 'Savaş boyunca her turun başında +1 Ekstra Enerji sağlar (En fazla 5 Enerji sınırına kadar).',
+    flavor: 'Göklerde dalgalanan sancak tüm ordunun cesaretini ve enerjisini tazeler.',
+    targetType: 'self',
+  },
+  {
+    id: 'rallying_drill',
+    cardKey: 'rallying_drill',
+    name: 'Taktik Disiplin (Güçlendirme)',
+    cardType: 'commander',
+    rarity: 'uncommon',
+    cost: 1,
+    description: '+1 Enerji yeniler (Maks 5) ve tüm orduya 5 Blok kazandırır.',
+    flavor: 'Disiplinli bir ordu asla yorulmaz.',
+    targetType: 'army',
+  },
+
+  // --- ÖZEL MEKANİKLİ KARTLAR (Slay the Spire Esintili & Enerjisiz/Koşullu) ---
+  {
+    id: 'commander_anger',
+    cardKey: 'anger',
+    name: 'Komutanın Gazabı',
+    cardType: 'commander',
+    rarity: 'common',
+    cost: 0,
+    isAngerMechanic: true,
+    description: '0 Enerji. 6 Hasar verir. (Turda 1 kez destenin en üstüne konur; aynı turda tekrar oynanırsa mezarlığa gider).',
+    flavor: 'Öfke bir kez alevlenir, ancak kontrolsüzce sürekli tüketilemez.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'shield_bash',
+    cardKey: 'shield_bash',
+    name: 'Kalkan Darbesi',
+    cardType: 'commander',
+    rarity: 'uncommon',
+    cost: 2,
+    isBodySlamMechanic: true,
+    description: 'Mevcut toplam Kalkanın (Blok) kadar hedefe hasar vurur.',
+    flavor: 'Ağır çelik kalkan sadece korumaz, ezer.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'flank_charge',
+    cardKey: 'flank_charge',
+    name: 'Kanat Akını',
+    cardType: 'unit',
+    requiredClass: 'cavalry',
+    rarity: 'uncommon',
+    cost: 2,
+    isDynamicCost: true,
+    description: '14 Hasar vurur. EĞER turda oynanan İLK kart ise veya düşmanda Piyade yoksa bedeli 0 ENERJİ olur!',
+    flavor: 'Boş kalan açık kanada yapılan süvari hücumu durdurulamaz.',
+    targetType: 'single-enemy',
+    dynamicCostCalculator: (state: GameBattleState) => {
+      const hasEnemyInfantry = state.enemyWarband.units.some(u => !u.isDead && u.unitClass === 'infantry');
+      if (!hasEnemyInfantry) return 0;
+      return 2;
+    },
+  },
+  {
+    id: 'pinning_volley',
+    cardKey: 'pinning_volley',
+    name: 'Hedefli Yaylım Ateşi',
+    cardType: 'unit',
+    requiredClass: 'archer',
+    rarity: 'common',
+    cost: 1,
+    isDynamicCost: true,
+    description: '3 kez 3 hasar vurur ve hedefi Sabitler (Pin). Düşman zaten Sabitlenmişse bedeli 0 ENERJİ olur.',
+    flavor: 'Gökten inen oklar ayakları yere mıhlar.',
+    targetType: 'single-enemy',
+    dynamicCostCalculator: (state: GameBattleState) => {
+      const anyPinned = state.enemyWarband.units.some(u => !u.isDead && (u.status.pinned ?? 0) > 0);
+      return anyPinned ? 0 : 1;
+    },
+  },
+  {
+    id: 'parry_and_counter',
+    cardKey: 'parry_and_counter',
+    name: 'Savuştur & Karşıla',
+    cardType: 'commander',
+    rarity: 'uncommon',
+    cost: 1,
+    isDynamicCost: true,
+    description: '6 Blok kazan ve Aktif Savuşturma aç. Ön saftaysan bedeli 0 ENERJİ olur!',
+    flavor: 'Kılıcın ucuyla yönünü saptır ve açık noktasından yakala.',
+    targetType: 'self',
+    dynamicCostCalculator: (state: GameBattleState) => {
+      return state.playerCommander.stance === 'vanguard' ? 0 : 1;
+    },
+  },
+
+  // --- BİRLİK KARTLARI (INFANTRY, ARCHER, CAVALRY, HEAVY) ---
+  {
+    id: 'infantry_phalanx',
+    cardKey: 'infantry_phalanx',
+    name: 'Kalkan Duvarı',
+    cardType: 'unit',
+    requiredClass: 'infantry',
+    rarity: 'common',
+    cost: 1,
+    description: 'Canlı her Piyaden başına Komutana ve orduya 6 Blok kazandırır.',
+    flavor: 'Omuz omuza kenetlenen kalkanlar aşılmaz bir set çeker.',
+    targetType: 'army',
+  },
+  {
+    id: 'infantry_spear_wall',
+    cardKey: 'infantry_spear_wall',
+    name: 'Süngü Karşılama',
+    cardType: 'unit',
+    requiredClass: 'infantry',
+    rarity: 'uncommon',
+    cost: 1,
+    description: '8 Blok kazan. Bu tur sana saldıran Süvari birliklerine 12 Karşı Hasar vurur.',
+    flavor: 'Atları görünce mızrakları toprağa saplayıp bekleyin.',
+    targetType: 'self',
+  },
+  {
+    id: 'archer_rain_arrows',
+    cardKey: 'archer_rain_arrows',
+    name: 'Ok Yağmuru',
+    cardType: 'unit',
+    requiredClass: 'archer',
+    rarity: 'common',
+    cost: 2,
+    description: 'TÜM düşmanlara 7 menzilli hasar vurur. Zırh deler.',
+    flavor: 'Güneşi karartan oklar ordunun üzerini kaplar.',
+    targetType: 'all-enemies',
+  },
+  {
+    id: 'cavalry_trample',
+    cardKey: 'cavalry_trample',
+    name: 'Ezici Süvari Koşusu',
+    cardType: 'unit',
+    requiredClass: 'cavalry',
+    rarity: 'uncommon',
+    cost: 2,
+    description: '11 Hasar vurur. Düşman Okçusuna vuruyorsa +%50 bonus hasar (16) verir ve sersemletir.',
+    flavor: 'Menzilli birlikler at nalının altında dağılır.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'heavy_armor_crush',
+    cardKey: 'heavy_armor_crush',
+    name: 'Zırh Kıran Gürz',
+    cardType: 'unit',
+    requiredClass: 'heavy',
+    rarity: 'common',
+    cost: 2,
+    description: '12 Hasar vurur. Düşmanın TÜM Kalkanını (Blok) anında siler!',
+    flavor: 'Hiçbir kalkan bu ağırlıktaki bir çelik gürze dayanamaz.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'heavy_cleave',
+    cardKey: 'heavy_cleave',
+    name: 'Geniş Balta Savuruşu',
+    cardType: 'unit',
+    requiredClass: 'heavy',
+    rarity: 'rare',
+    cost: 2,
+    description: 'Tüm düşmanlara 10 hasar verir ve zayıflatır.',
+    flavor: 'Tek bir devasa balta savuruşu ile ön cephe yarılır.',
+    targetType: 'all-enemies',
+  },
+
+  // --- TAKTİK & KOMBİNE HARP KARTLARI ---
+  {
+    id: 'combined_arms_assault',
+    cardKey: 'combined_arms_assault',
+    name: 'Kombine Hücum',
+    cardType: 'tactics',
+    rarity: 'rare',
+    cost: 1,
+    description: '8 Hasar vur. Eğer orduda en az 3 FARKLI birlik sınıfı varsa, 2 Kart Çek ve +1 Enerji geri kazan (Maks 5)!',
+    flavor: 'Piyade tutar, okçu yıpratır, süvari bitirir.',
+    targetType: 'single-enemy',
+  },
+  {
+    id: 'battlefield_ration',
+    cardKey: 'battlefield_ration',
+    name: 'Savaş Erzakı',
+    cardType: 'tactics',
+    rarity: 'common',
+    cost: 0,
+    description: '1 Yiyecek harcar: Komutana 10 Can yeniler ve bu tur +1 Enerji kazandırır (Maks 5).',
+    flavor: 'Sıcak bir lokma ekmek ve et, askerin damarlarındaki kanı canlandırır.',
+    targetType: 'self',
+    canPlayCheck: (state: GameBattleState) => {
+      if (state.playerCommander.food <= 0) {
+        return { canPlay: false, reason: 'Yetersiz Yiyecek (Erzakın yok)!' };
+      }
+      return { canPlay: true };
+    },
+  },
+  {
+    id: 'bodyguard_sacrifice',
+    cardKey: 'bodyguard_sacrifice',
+    name: 'Muhafız Kalkanı',
+    cardType: 'commander',
+    rarity: 'uncommon',
+    cost: 0,
+    description: '0 Enerji. Komutana 12 Blok verir. En zayıf piyadenden 3 can eksiltir.',
+    flavor: 'Komutanın önüne atılan sadık neferler.',
+    targetType: 'self',
+    canPlayCheck: (state: GameBattleState) => {
+      const hasInfantry = state.playerArmy.some(u => u !== null && !u.isDead && u.unitClass === 'infantry');
+      if (!hasInfantry) {
+        return { canPlay: false, reason: 'Canlı Piyaden yok!' };
+      }
+      return { canPlay: true };
+    },
+  },
+  {
+    id: 'duel_challenge',
+    cardKey: 'duel_challenge',
+    name: 'Meydan Okuma (Düello)',
+    cardType: 'commander',
+    rarity: 'rare',
+    cost: 2,
+    description: 'Doğrudan Düşman Komutanına 15 hasar vurur. Kazanılırsa orduya +2 Enerji morali sağlar (Maks 5).',
+    flavor: 'İki ordunun ortasında komutanlar kozlarını paylaşır.',
+    targetType: 'single-enemy',
+  },
+];
+
+// Başlangıç Destesi (10 Kart)
+export const getStarterDeck = (): Card[] => [
+  { ...ALL_CARDS.find(c => c.cardKey === 'strike')!, id: 'strike_1' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'strike')!, id: 'strike_2' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'strike')!, id: 'strike_3' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'defend')!, id: 'defend_1' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'defend')!, id: 'defend_2' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'defend')!, id: 'defend_3' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'rally')!, id: 'rally_1' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'anger')!, id: 'anger_1' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'infantry_phalanx')!, id: 'phalanx_1' },
+  { ...ALL_CARDS.find(c => c.cardKey === 'battlefield_ration')!, id: 'ration_1' },
+];
